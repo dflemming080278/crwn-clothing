@@ -1,4 +1,3 @@
-import { Route } from "react-router";
 
 const Hats = () => {
     return ( 
