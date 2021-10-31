@@ -43,6 +43,7 @@ class App extends React.Component {
     }
 
     console.log('currentUser: ' + this.state.currentUser );
+    
   }
 
   componentDidMount() {

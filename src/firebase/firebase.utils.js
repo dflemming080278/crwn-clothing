@@ -6,6 +6,7 @@ import {
     signInWithPopup,
     signOut,
     createUserWithEmailAndPassword,
+    signInWithEmailAndPassword,
   } from 'firebase/auth';
  import {
      getFirestore,
@@ -75,13 +76,23 @@ async function authStateObserver(user) {
 }
 
 // Sign in Firebase using popup auth and Google as the identity provider.
-export async function firebaseSignIn() {
+export async function firebaseEmailAndPasswordSignIn(email, password) {
+
+    try {
+        await signInWithEmailAndPassword(getAuth(), email, password);
+    }catch(error) {
+        console.log(error.message);
+    }
+}
+
+// Sign in Firebase using popup auth and Google as the identity provider.
+export async function firebaseGoogleSignIn() {
     var provider = new GoogleAuthProvider();
 
     try {
         await signInWithPopup(getAuth(), provider);
     }catch(error) {
-//alert(error.message);
+        console.log(error.message);
     }
 }
 
@@ -132,7 +143,6 @@ export async function createUserProfileDocument(userAuth)  {
                 });
             }
         } catch(error) {
-            console.error(error);
             console.log('error creating user:- ', error.message);
         }
     }

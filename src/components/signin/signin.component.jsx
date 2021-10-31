@@ -5,7 +5,7 @@ import './signin.styles.scss';
 import FormInput from "../form-input/form-input.component";
 import CustomButton from "../custom-button/custom-button.component";
 
- import { firebaseSignIn } from '../../firebase/firebase.utils';
+ import { firebaseEmailAndPasswordSignIn, firebaseGoogleSignIn } from '../../firebase/firebase.utils';
 
 
 
@@ -25,6 +25,10 @@ class SignIn extends Component {
 
     handleSubmit = (event) => {
         event.preventDefault();
+
+        const {email, password } = this.state;
+
+        firebaseEmailAndPasswordSignIn(email, password);
         this.setState({ email:'', password:'' });
     }
 
@@ -50,8 +54,8 @@ class SignIn extends Component {
                         value={ this.state.password } 
                         required/>
                     <div className='buttons'>
-                        <CustomButton type='submit'>Submit Form</CustomButton>
-                        <CustomButton onClick= { firebaseSignIn } isGoogleSignIn>
+                        <CustomButton type='submit'>SIGN IN</CustomButton>
+                        <CustomButton onClick= { firebaseGoogleSignIn } isGoogleSignIn>
                             {' '}
                             Sign in with Google{' '}
                         </CustomButton>
