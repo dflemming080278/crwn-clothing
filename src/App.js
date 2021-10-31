@@ -7,12 +7,13 @@ import ShopPage from './pages/shop/shop.component';
 import Header from './components/header/header.component';
 import SignInAndSignUpPage from './components/sign-in-and-sign-up/sign-in-and-sign-up.component';
 
-import { initFirebaseAuth } from './firebase/firebase.utils';
+import { init, unSubscribeFromAuth, createUserProfileDocument } from './firebase/firebase.utils';
 
 
 class App extends React.Component {
   constructor() {
     super();
+
     this.state={
       currentUser: null,
       unsubscribeFromAuth: null
@@ -20,18 +21,39 @@ class App extends React.Component {
   }
   
 
-  handleCurrentUser = (user) => {
-    this.setState({ currentUser: user});
+  handleCurrentUser = async (userAuth) => {
+    if(userAuth) {
+
+      await createUserProfileDocument(userAuth);
+      this.setState({ 
+        currentUser: userAuth 
+      }
+      // ,() => { //async pattern, ensure setstate finish
+      //   console.log(this.state.currentUser);
+      // }
+      );
+    } else {
+      this.setState({ 
+        currentUser: null 
+      }
+      // ,() => { //async pattern, ensure setstate finish
+      //   console.log(this.state.currentUser);
+      // }
+      );
+    }
+
+    console.log('currentUser: ' + this.state.currentUser );
   }
 
   componentDidMount() {
-    initFirebaseAuth( this.handleCurrentUser,  this.state.unsubscribeFromAuth);
+    init( this.handleCurrentUser );       
   }
 
   componentWillUnmount() {
-      this.state.unsubscribeFromAuth();
+    unSubscribeFromAuth();
   }
 
+  
   render() {
     return (
       <div>

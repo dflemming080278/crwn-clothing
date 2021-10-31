@@ -5,20 +5,22 @@ import {
     GoogleAuthProvider,
     signInWithPopup,
     signOut,
+    createUserWithEmailAndPassword,
   } from 'firebase/auth';
-// import {
-//     getFirestore,
+ import {
+     getFirestore,
 //     collection,
-//     addDoc,
+//      addDoc,
 //     query,
 //     orderBy,
 //     limit,
-//     onSnapshot,
-//     setDoc,
+       onSnapshot,
+       getDoc,
+       setDoc,
 //     updateDoc,
-//     doc,
+     doc,
 //     serverTimestamp,
-// } from 'firebase/firestore';
+ } from 'firebase/firestore';
 // import {
 //     getStorage,
 //     ref,
@@ -38,31 +40,129 @@ initializeApp(firebaseAppConfig);
 const auth = getAuth();
 
 let handleCurrentUser = null;
+let handleUnsubscribeFromAuth = null
 
 // Initialize firebase auth
-export function initFirebaseAuth(appHandleCurrentUser, appUnsubscribeFromAuth) {
-
+export function init(appHandleCurrentUser) {
     handleCurrentUser = appHandleCurrentUser;
-
-    // Listen to auth state changes.
-    appUnsubscribeFromAuth = onAuthStateChanged(auth, authStateObserver);
+    initFirebaseAuth();
 }
 
-function authStateObserver(user) {
+// Listen to auth state changes.
+export function initFirebaseAuth() {
+    handleUnsubscribeFromAuth = onAuthStateChanged(auth, authStateObserver);
+}
+
+// Listen to Snapshot changes.
+export function initFirebaseSnapshot(userAuth) {
+    const db = getFirestore();
+    const userRef = doc(db,`users/${ userAuth.uid }`);
+    
+    onSnapshot(userRef, firebaseOnSnapshot);
+}
+
+export function unSubscribeFromAuth() {
+    handleUnsubscribeFromAuth();
+}
+
+async function authStateObserver(user) {
     handleCurrentUser(user);
+
+    if (user) {
+//console.log('1. user.uid:- ' + user.uid);
+        initFirebaseSnapshot ( user ); 
+    }
 }
 
-// Signs-in Friendly Chat.
+// Sign in Firebase using popup auth and Google as the identity provider.
 export async function firebaseSignIn() {
-    // Sign in Firebase using popup auth and Google as the identity provider.
     var provider = new GoogleAuthProvider();
-    await signInWithPopup(getAuth(), provider);
+
+    try {
+        await signInWithPopup(getAuth(), provider);
+    }catch(error) {
+//alert(error.message);
+    }
 }
 
-// Signs-out of Friendly Chat.
+// Sign out of Firebase.
 export function firebaseSignOut() {
-    // Sign out of Firebase.
-    signOut(getAuth());
+    signOut(auth);
+}
+
+export async function firebaseCreateUserWithEmailAndPassword(displayName, email, password) {
+    try {
+
+        const { user } = await createUserWithEmailAndPassword(
+            auth,
+            email, 
+            password
+        );
+        user.displayName = displayName;
+
+        return user;
+    }catch(error) {
+        console.log(error.message);
+    }
+}
+
+
+
+export async function createUserProfileDocument(userAuth)  {
+    if (!userAuth) return;
+
+
+    const db = getFirestore();
+
+    const userRef = doc(db,`users/${ userAuth.uid }`);
+
+    const snapShot = await getDoc(userRef);
+
+    if(!snapShot.exists()) {
+        
+        const { displayName, email } = userAuth;
+        const createdAt = new Date();
+
+        try {
+           if (userAuth.uid) {
+                await setDoc(userRef, {
+                    displayName,
+                    email,
+                    createdAt
+                });
+            }
+        } catch(error) {
+            console.error(error);
+            console.log('error creating user:- ', error.message);
+        }
+    }
+
+    return userRef;
+  }
+
+export async function firebaseOnSnapshot(userSnap) {
+    
+    if (userSnap.exists) {
+//console.log("Snapshot data changed:", userSnap.data());
+
+        handleCurrentUser({
+            id: userSnap.id,
+            ...userSnap.data()
+        });
+      } else {
+        // doc.data() will be undefined in this case
+        console.log("No such document!");
+      }
+}
+
+// // Return Firbase Collection object
+// export async function firebaseCollection(name) {
+//     return collection(name);
+// }
+
+// Return Firebase Document object
+export function firebaseDoc(name) {
+    return doc(name);
 }
 
 
